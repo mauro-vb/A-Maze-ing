@@ -1,4 +1,5 @@
-from input_handling.config_reader import extract_config
+from a_maze_ing import ConfigParser
 
 if __name__ == "__main__":
-    print(extract_config())
+    p = ConfigParser('sample_config.txt')
+    print(p)

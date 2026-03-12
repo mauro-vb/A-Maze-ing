@@ -4,12 +4,12 @@
 WIDTH=20
 HEIGHT=15
 ENTRY=0,0
-EXIT=19,14
+EXIT=1,0
 OUTPUT_FILE=maze.txt
 PERFECT=True
 
 # Optional
 
 SEED=1234329384
-ALGORITHM=DFS
+# ALGORITHM=DFS
 # Hunt and Kill OR Prim's OR Origin Shift
