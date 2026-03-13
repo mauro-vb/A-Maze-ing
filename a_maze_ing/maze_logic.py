@@ -1,6 +1,13 @@
 from .parser import ConfigParser
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from random import seed, randint
+
+pattern_42: Tuple[Tuple[int, int]] = (
+    (0, 0), (0, 1), (0, 2), (1, 2), (2, 0),
+    (2, 1), (2, 2), (2, 3), (2, 4),  # '4'
+    (4, 0), (5, 0), (6, 0), (6, 1), (6, 2), (5, 2),
+    (4, 2), (4, 3), (4, 4), (5, 4), (6, 4)  # '2'
+)
 
 class Cell:
     def __init__(
@@ -9,21 +16,27 @@ class Cell:
         visited:bool = False,
         immutable:bool = False,
         entry: bool = False,
-        exit: bool = False
+        exit: bool = False,
     ) -> None:
         '''Cell initialization'''
-        self.walls = walls
-        self.visited = visited
-        self.immutable = immutable
-        self.entry = entry
-        self.exit = exit
+        self.walls: int = walls
+        self.visited: bool = visited
+        self.immutable: bool = immutable
+        self.entry: bool = entry
+        self.exit:bool = exit
+        self.pattern = pattern_42
 
 class MazeGenerator:
-    def __init__(self, config_file: str, anim: bool = False) -> None:
+    def __init__(
+        self,
+        config_file: str,
+        anim: bool = False,
+        pattern: Tuple[Tuple[int, int]] = pattern_42
+    ) -> None:
         self.config: ConfigParser = ConfigParser(config_file)
         self.anim: bool = anim
         self.maze: List[List[Cell]] = []
-
+        self.pattern = pattern
         s: Optional[int] = self.config.SEED
         seed(randint(0, 99999999) if s is None else s)
         self.maze_init()
@@ -39,6 +52,25 @@ class MazeGenerator:
                 isexit: bool = exit == (x, y)
                 row.append(Cell(entry=isentry, exit=isexit))
             self.maze.append(row)
+
+
+        pwidth: int = max(self.pattern, key=lambda pos: pos[0])[0]
+        pheight: int = max(self.pattern, key=lambda pos: pos[1])[1]
+
+        if self.config.WIDTH > pwidth and self.config.HEIGHT > pheight:
+            x_offset: int = (self.config.WIDTH - pwidth) // 2
+            y_offset: int = (self.config.HEIGHT - pheight) // 2
+            for x, y in self.pattern:
+                cell: Cell = self.maze[y + y_offset][x + x_offset]
+                if cell.entry or cell.exit:
+                    print("Entry and Exit cannot be on pattern.")
+                    return
+                cell.walls = 15
+                cell.visited = True
+                cell.immutable = True
+        else:
+            print("Could not draw pattern, maze is too small...")
+
 
     def render_maze(self, save: bool = False, wall_char: str = '█') -> None:
         render: str = ''
@@ -80,7 +112,18 @@ class MazeGenerator:
         else:
             print(bottomwall)
 
+    def get_maze_hex(self) -> str:
+        maze_hex: str = ''
+        for row in self.maze:
+            line: str = ''
+            for cell in row:
+                line += f'{cell.walls:X}'
+            maze_hex += line + '\n'
+        return maze_hex
+
     def test_generate(self) -> None:
         for row in self.maze:
             for cell in row:
-                cell.walls = randint(0, 15)
+                if cell.immutable:
+                    continue
+                cell.walls = 0
