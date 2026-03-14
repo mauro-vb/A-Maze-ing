@@ -71,6 +71,45 @@ class MazeGenerator:
         else:
             print("Could not draw pattern, maze is too small...")
 
+    def new_render_maze(self, save: bool = False, wall_char: str = '█') -> None:
+        GREEN = '\033[92m'
+        RED = '\033[91m'
+        YELLOW = '\033[93m'
+        RESET = '\033[0m'
+        render: str = ""
+        for y, row in enumerate(self.maze):
+            top_line = ""
+            mid_line = ""
+            for x, cell in enumerate(row):
+                if cell.entry:
+                    content = f"{GREEN} E {RESET}"
+                elif cell.exit:
+                    content = f"{RED} X {RESET}"
+                elif cell.immutable:
+                    content = f"{YELLOW}███{RESET}"
+                else:
+                    content = "   "
+                corner = wall_char
+                north = wall_char * 3 if (cell.walls & 1) else "   "
+                top_line += f"{corner}{north}"
+                west = wall_char if (cell.walls & 8) else " "
+                mid_line += f"{west}{content}"
+                if x == self.config.WIDTH - 1:
+                    top_line += corner
+                    east = wall_char if (cell.walls & 2) else " "
+                    mid_line += east
+            render += top_line + "\n" + mid_line + "\n"
+        bottom_line = ""
+        for cell in self.maze[-1]:
+            corner = wall_char
+            south = wall_char * 3 if (cell.walls & 4) else "   "
+            bottom_line += f"{corner}{south}"
+        bottom_line += wall_char
+        render += bottom_line + "\n"
+        if save:
+            pass
+        else:
+            print(render)
 
     def render_maze(self, save: bool = False, wall_char: str = '█') -> None:
         render: str = ''
@@ -127,3 +166,55 @@ class MazeGenerator:
                 if cell.immutable:
                     continue
                 cell.walls = 0
+
+    def generate(self) -> None:
+        algo: Optional[str] = self.config.ALGORITHM
+        if not algo or algo == 'DFS':
+            self._generate_dfs()
+        else:
+            self._generate_dfs()
+
+    def _get_unvisited_neighbors(self, x: int, y: int) -> List[Tuple[int, int, str]]:
+        neighbors: List[Tuple[int, int, str]] = []
+        if y > 0 and not self.maze[y - 1][x].visited:
+            neighbors.append((x, y - 1, 'N'))
+        if x < self.config.WIDTH - 1 and not self.maze[y][x + 1].visited:
+            neighbors.append((x + 1, y, 'E'))
+        if y < self.config.HEIGHT - 1 and not self.maze[y + 1][x].visited:
+            neighbors.append((x, y + 1, 'S'))
+        if x > 0 and not self.maze[y][x - 1].visited:
+            neighbors.append((x - 1, y, 'W'))
+        return neighbors
+
+    def _remove_wall(self, cx: int, cy: int, nx: int, ny: int, direction: str) -> None:
+        current_cell = self.maze[cy][cx]
+        next_cell = self.maze[ny][nx]
+        if direction == 'N':
+            current_cell.walls &= ~1
+            next_cell.walls &= ~4
+        elif direction == 'E':
+            current_cell.walls &= ~2
+            next_cell.walls &= ~8
+        elif direction == 'S':
+            current_cell.walls &= ~4
+            next_cell.walls &= ~1
+        elif direction == 'W':
+            current_cell.walls &= ~8
+            next_cell.walls &= ~2
+
+    def _generate_dfs(self) -> None:
+        from random import choice
+
+        start_x: int = self.config.ENTRY['x']
+        start_y: int = self.config.ENTRY['y']
+        stack: List[Tuple[int, int]] = [(start_x, start_y)]
+        self.maze[start_y][start_x].visited = True
+        while stack:
+            current_x, current_y = stack.pop()
+            neighbors = self._get_unvisited_neighbors(current_x, current_y)
+            if neighbors:
+                stack.append((current_x, current_y))
+                next_x, next_y, direction = choice(neighbors)
+                self._remove_wall(current_x, current_y, next_x, next_y, direction)
+                self.maze[next_y][next_x].visited = True
+                stack.append((next_x, next_y))
