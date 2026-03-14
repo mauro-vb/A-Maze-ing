@@ -171,8 +171,8 @@ class MazeGenerator:
         algo: Optional[str] = self.config.ALGORITHM
         if not algo or algo == 'DFS':
             self._generate_dfs()
-        else:
-            self._generate_dfs()
+        elif algo == 'BFS':
+            self._generate_bfs()
 
     def _get_unvisited_neighbors(self, x: int, y: int) -> List[Tuple[int, int, str]]:
         neighbors: List[Tuple[int, int, str]] = []
@@ -218,3 +218,21 @@ class MazeGenerator:
                 self._remove_wall(current_x, current_y, next_x, next_y, direction)
                 self.maze[next_y][next_x].visited = True
                 stack.append((next_x, next_y))
+
+    def _generate_bfs(self) -> None:
+        from random import shuffle
+        from collections import deque
+
+        start_x: int = self.config.ENTRY['x']
+        start_y: int = self.config.ENTRY['y']
+        queue: deque[Tuple[int, int]] = deque([(start_x, start_y)])
+        self.maze[start_y][start_x].visited = True
+        while queue:
+            current_x, current_y = queue.popleft()
+            neighbors = self._get_unvisited_neighbors(current_x, current_y)
+            shuffle(neighbors)
+            for next_x, next_y, direction in neighbors:
+                if not self.maze[next_y][next_x].visited:
+                    self._remove_wall(current_x, current_y, next_x, next_y, direction)
+                    self.maze[next_y][next_x].visited = True
+                    queue.append((next_x, next_y))

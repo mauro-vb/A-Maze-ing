@@ -137,7 +137,7 @@ class ConfigParser:
             raise ValueError(value)
 
     def assign_algorithm(self, strvalue: str) -> None:
-        if not strvalue.lower() in ('LIST OF POSSIBLE ALGOS'):
+        if not strvalue.lower() in ('dfs', 'bfs'):
             raise ValueError(strvalue)
         self.ALGORITHM = strvalue
 

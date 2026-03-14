@@ -1,15 +1,15 @@
 # Sample Configuration File
 
 # Mandatory
-WIDTH=15
-HEIGHT=10
+WIDTH=25
+HEIGHT=25
 ENTRY=0,0
-EXIT=9,4
+EXIT=23,23
 OUTPUT_FILE=maze.txt
 PERFECT=True
 
 # Optional
 
 SEED=1234321111
-# ALGORITHM=DFS
+ALGORITHM=DFS
 # Hunt and Kill OR Prim's OR Origin Shift
