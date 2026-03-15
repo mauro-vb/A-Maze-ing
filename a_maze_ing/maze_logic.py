@@ -204,6 +204,8 @@ class MazeGenerator:
 
     def _generate_dfs(self) -> None:
         from random import choice
+        import time
+        import os
 
         start_x: int = self.config.ENTRY['x']
         start_y: int = self.config.ENTRY['y']
@@ -218,6 +220,10 @@ class MazeGenerator:
                 self._remove_wall(current_x, current_y, next_x, next_y, direction)
                 self.maze[next_y][next_x].visited = True
                 stack.append((next_x, next_y))
+                if self.anim:
+                    os.system('clear')
+                    self.new_render_maze()
+                    time.sleep(0.05)
 
     def _generate_bfs(self) -> None:
         from random import shuffle

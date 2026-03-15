@@ -1,10 +1,10 @@
 # Sample Configuration File
 
 # Mandatory
-WIDTH=25
-HEIGHT=25
+WIDTH=20
+HEIGHT=20
 ENTRY=0,0
-EXIT=23,23
+EXIT=17,16
 OUTPUT_FILE=maze.txt
 PERFECT=True
 
