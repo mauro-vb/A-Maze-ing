@@ -105,11 +105,11 @@ class MazeGenerator:
             south = wall_char * 3 if (cell.walls & 4) else "   "
             bottom_line += f"{corner}{south}"
         bottom_line += wall_char
-        render += bottom_line + "\n"
+        render += bottom_line
         if save:
             pass
         else:
-            print(render)
+            print(render, end='')
 
     def render_maze(self, save: bool = False, wall_char: str = '█') -> None:
         render: str = ''
@@ -221,7 +221,7 @@ class MazeGenerator:
                 self.maze[next_y][next_x].visited = True
                 stack.append((next_x, next_y))
                 if self.anim:
-                    os.system('clear')
+                    print('\033[H', end='')
                     self.new_render_maze()
                     time.sleep(0.05)
 
