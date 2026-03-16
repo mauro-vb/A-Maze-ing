@@ -1,5 +1,6 @@
 from .parser import ConfigParser
-from typing import List, Optional, Tuple
+from .colors import Theme
+from typing import List, Optional, Tuple, Dict
 from random import seed, randint
 
 pattern_42: Tuple[Tuple[int, int], ...] = (
@@ -33,6 +34,7 @@ class MazeGenerator:
         self,
         config_file: str,
         anim: bool = False,
+        theme: Theme = Theme.SEASIDE,
         new_seed: bool = False,
         pattern: Tuple[Tuple[int, int], ...] = pattern_42
     ) -> None:
@@ -42,6 +44,11 @@ class MazeGenerator:
         self.pattern = pattern
         s: Optional[int] = self.config.SEED
         seed(randint(0, 99999999) if s is None or new_seed else s)
+        value: Dict = theme.value
+        self.wall_color = value['walls']
+        self.pattern_color = value['pattern']
+        self.exit_color = value['exit']
+        self.entry_color = value['entry']
         self.maze_init()
 
     def maze_init(self) -> None:
@@ -72,24 +79,23 @@ class MazeGenerator:
         else:
             print("Could not draw pattern, maze is too small...")
 
+
     def new_render_maze(
-        self, save: bool = False, wall_char: str = '█'
+        self, save: bool = False
     ) -> None:
-        GREEN = '\033[92m'
-        RED = '\033[91m'
-        YELLOW = '\033[93m'
         RESET = '\033[0m'
         render: str = "\n"
+        wall_char: str = f'{self.wall_color}█{RESET}'
         for y, row in enumerate(self.maze):
             top_line = ""
             mid_line = ""
             for x, cell in enumerate(row):
                 if cell.entry:
-                    content = f"{GREEN} E {RESET}"
+                    content = f"{self.entry_color} ⬤ {RESET}"
                 elif cell.exit:
-                    content = f"{RED} X {RESET}"
+                    content = f"{self.exit_color} ⬤ {RESET}"
                 elif cell.immutable:
-                    content = f"{YELLOW}███{RESET}"
+                    content = f"{self.pattern_color}███{RESET}"
                 else:
                     content = "   "
                 corner = wall_char
