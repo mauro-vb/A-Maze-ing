@@ -20,7 +20,9 @@ debug:
 	$(PYTHON) -m pdb $(MAIN)
 
 lint:
-	@$(PYTHON) -m flake8 $(SRC)
+	@echo "\n-- Running flake8 --\n"
+	-@$(PYTHON) -m flake8 $(SRC)
+	@echo "\n-- Running mypy --\n"
 	@$(PYTHON) -m mypy . \
 		--warn-return-any \
 		--warn-unused-ignores \
@@ -29,8 +31,10 @@ lint:
 		--check-untyped-defs
 
 lint-strict:
-	@$(PYTHON) -m flake8 . --strict
-	@$(PYTHON) -m mypy . --strict \
+	@echo "\n-- Running flake8 --\n"
+	-@$(PYTHON) -m flake8 . --strict
+	@echo "Running mypy"
+	-@$(PYTHON) -m mypy . --strict \
 		--warn-return-any \
 		--warn-unused-ignores \
 		--ignore-missing-imports \

@@ -139,7 +139,7 @@ class ConfigParser:
     def assign_algorithm(self, strvalue: str) -> None:
         if not strvalue.lower() in ('dfs', 'bfs'):
             raise ValueError(strvalue)
-        self.ALGORITHM = strvalue
+        self.ALGORITHM = strvalue.upper()
 
     def __str__(self) -> str:
         return (

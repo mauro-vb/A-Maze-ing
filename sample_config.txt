@@ -10,6 +10,6 @@ PERFECT=True
 
 # Optional
 
-SEED=1234321111
+#SEED=1234321111
 ALGORITHM=DFS
 # Hunt and Kill OR Prim's OR Origin Shift

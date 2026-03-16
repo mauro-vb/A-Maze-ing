@@ -2,19 +2,20 @@ from .parser import ConfigParser
 from typing import List, Optional, Tuple
 from random import seed, randint
 
-pattern_42: Tuple[Tuple[int, int]] = (
+pattern_42: Tuple[Tuple[int, int], ...] = (
     (0, 0), (0, 1), (0, 2), (1, 2), (2, 0),
     (2, 1), (2, 2), (2, 3), (2, 4),  # '4'
     (4, 0), (5, 0), (6, 0), (6, 1), (6, 2), (5, 2),
     (4, 2), (4, 3), (4, 4), (5, 4), (6, 4)  # '2'
 )
 
+
 class Cell:
     def __init__(
         self,
         walls: int = 15,
-        visited:bool = False,
-        immutable:bool = False,
+        visited: bool = False,
+        immutable: bool = False,
         entry: bool = False,
         exit: bool = False,
     ) -> None:
@@ -23,22 +24,24 @@ class Cell:
         self.visited: bool = visited
         self.immutable: bool = immutable
         self.entry: bool = entry
-        self.exit:bool = exit
+        self.exit: bool = exit
         self.pattern = pattern_42
+
 
 class MazeGenerator:
     def __init__(
         self,
         config_file: str,
         anim: bool = False,
-        pattern: Tuple[Tuple[int, int]] = pattern_42
+        new_seed: bool = False,
+        pattern: Tuple[Tuple[int, int], ...] = pattern_42
     ) -> None:
         self.config: ConfigParser = ConfigParser(config_file)
         self.anim: bool = anim
         self.maze: List[List[Cell]] = []
         self.pattern = pattern
         s: Optional[int] = self.config.SEED
-        seed(randint(0, 99999999) if s is None else s)
+        seed(randint(0, 99999999) if s is None or new_seed else s)
         self.maze_init()
 
     def maze_init(self) -> None:
@@ -52,8 +55,6 @@ class MazeGenerator:
                 isexit: bool = exit == (x, y)
                 row.append(Cell(entry=isentry, exit=isexit))
             self.maze.append(row)
-
-
         pwidth: int = max(self.pattern, key=lambda pos: pos[0])[0]
         pheight: int = max(self.pattern, key=lambda pos: pos[1])[1]
 
@@ -71,12 +72,14 @@ class MazeGenerator:
         else:
             print("Could not draw pattern, maze is too small...")
 
-    def new_render_maze(self, save: bool = False, wall_char: str = '█') -> None:
+    def new_render_maze(
+        self, save: bool = False, wall_char: str = '█'
+    ) -> None:
         GREEN = '\033[92m'
         RED = '\033[91m'
         YELLOW = '\033[93m'
         RESET = '\033[0m'
-        render: str = ""
+        render: str = "\n"
         for y, row in enumerate(self.maze):
             top_line = ""
             mid_line = ""
@@ -111,45 +114,45 @@ class MazeGenerator:
         else:
             print(render, end='')
 
-    def render_maze(self, save: bool = False, wall_char: str = '█') -> None:
-        render: str = ''
-        w: str = wall_char
-        hwall: str = f'{w}{w}{w}'
-        hopen: str = '   '
-        vwall: str = f'{w}'
-        vopen: str = ' '
-        for row in self.maze:
-            line1: str = ''
-            line2: str = ''
-            for cell in row:
-                cellcontent: str = hopen
-                if cell.entry or cell.exit:
-                    cellcontent = ' ● ' if cell.entry else ' * '
-
-                # 1st line
-                north: str = hwall if (cell.walls & (1 << 0)) else hopen
-                east: str = vwall if (cell.walls & (1 << 1)) else vopen
-                west: str = vwall if (cell.walls & (1 << 3)) else vopen
-                line1 += west + north + east
-
-                # 2nd line
-                east: str = vwall if (cell.walls & (1 << 1)) else vopen
-                south: str = hwall if (cell.walls & (1 << 2)) else cellcontent
-                west: str = vwall if (cell.walls & (1 << 3)) else vopen
-                line2 += west + south + east
-
-            rowstr: str = line1 + '\n' + line2 + '\n'
-            if save:
-                render += rowstr
-            else:
-                print(rowstr, end='')
-
-        bottomwall: str = f'{w}{w}{w}{w}{w}' * self.config.WIDTH
-        if save:
-            with open(self.config.OUTPUT_FILE, 'w') as file:
-                file.write(render + bottomwall)
-        else:
-            print(bottomwall)
+#    def render_maze(self, save: bool = False, wall_char: str = '█') -> None:
+#        render: str = ''
+#        w: str = wall_char
+#        hwall: str = f'{w}{w}{w}'
+#        hopen: str = '   '
+#        vwall: str = f'{w}'
+#        vopen: str = ' '
+#        for row in self.maze:
+#            line1: str = ''
+#            line2: str = ''
+#            for cell in row:
+#                cellcontent: str = hopen
+#                if cell.entry or cell.exit:
+#                    cellcontent = ' ● ' if cell.entry else ' * '
+#
+#                # 1st line
+#                north: str = hwall if (cell.walls & (1 << 0)) else hopen
+#                east: str = vwall if (cell.walls & (1 << 1)) else vopen
+#                west: str = vwall if (cell.walls & (1 << 3)) else vopen
+#                line1 += west + north + east
+#
+#                # 2nd line
+#                east: str = vwall if (cell.walls & (1 << 1)) else vopen
+#                south: str = hwall if (cell.walls & (1 << 2)) else cellcontent
+#                west: str = vwall if (cell.walls & (1 << 3)) else vopen
+#                line2 += west + south + east
+#
+#            rowstr: str = line1 + '\n' + line2 + '\n'
+#            if save:
+#                render += rowstr
+#            else:
+#                print(rowstr, end='')
+#
+#        bottomwall: str = f'{w}{w}{w}{w}{w}' * self.config.WIDTH
+#        if save:
+#            with open(self.config.OUTPUT_FILE, 'w') as file:
+#                file.write(render + bottomwall)
+#        else:
+#            print(bottomwall)
 
     def get_maze_hex(self) -> str:
         maze_hex: str = ''
@@ -174,7 +177,9 @@ class MazeGenerator:
         elif algo == 'BFS':
             self._generate_bfs()
 
-    def _get_unvisited_neighbors(self, x: int, y: int) -> List[Tuple[int, int, str]]:
+    def _get_unvisited_neighbors(
+        self, x: int, y: int
+    ) -> List[Tuple[int, int, str]]:
         neighbors: List[Tuple[int, int, str]] = []
         if y > 0 and not self.maze[y - 1][x].visited:
             neighbors.append((x, y - 1, 'N'))
@@ -186,7 +191,9 @@ class MazeGenerator:
             neighbors.append((x - 1, y, 'W'))
         return neighbors
 
-    def _remove_wall(self, cx: int, cy: int, nx: int, ny: int, direction: str) -> None:
+    def _remove_wall(
+        self, cx: int, cy: int, nx: int, ny: int, direction: str
+    ) -> None:
         current_cell = self.maze[cy][cx]
         next_cell = self.maze[ny][nx]
         if direction == 'N':
@@ -205,7 +212,7 @@ class MazeGenerator:
     def _generate_dfs(self) -> None:
         from random import choice
         import time
-        import os
+        # import os
 
         start_x: int = self.config.ENTRY['x']
         start_y: int = self.config.ENTRY['y']
@@ -217,13 +224,15 @@ class MazeGenerator:
             if neighbors:
                 stack.append((current_x, current_y))
                 next_x, next_y, direction = choice(neighbors)
-                self._remove_wall(current_x, current_y, next_x, next_y, direction)
+                self._remove_wall(
+                    current_x, current_y, next_x, next_y, direction
+                )
                 self.maze[next_y][next_x].visited = True
                 stack.append((next_x, next_y))
                 if self.anim:
                     print('\033[H', end='')
                     self.new_render_maze()
-                    time.sleep(0.05)
+                    time.sleep(0.025)
 
     def _generate_bfs(self) -> None:
         from random import shuffle
@@ -239,6 +248,8 @@ class MazeGenerator:
             shuffle(neighbors)
             for next_x, next_y, direction in neighbors:
                 if not self.maze[next_y][next_x].visited:
-                    self._remove_wall(current_x, current_y, next_x, next_y, direction)
+                    self._remove_wall(
+                        current_x, current_y, next_x, next_y, direction
+                    )
                     self.maze[next_y][next_x].visited = True
                     queue.append((next_x, next_y))
