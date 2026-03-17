@@ -155,6 +155,9 @@ class MazeGenerator:
         if not self.config.PERFECT:
             self._turn_imperfect()
 
+        with open(self.config.OUTPUT_FILE, 'w') as file:
+            file.write(self.get_maze_hex())
+
     def _update_frame(self) -> None:
         # print('\033[H', end='')
         system('clear')
