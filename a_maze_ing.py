@@ -49,7 +49,11 @@ if __name__ == "__main__":
 
     def toggle_solution() -> None:
         global show_solution
+        global maze
         show_solution= (not show_solution)
+        if show_solution:
+            maze.show_solution()
+
 
     def toggle_animate() -> None:
         global animate

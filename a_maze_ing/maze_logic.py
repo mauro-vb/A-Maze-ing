@@ -28,7 +28,8 @@ class Cell:
         self.immutable: bool = immutable
         self.entry: bool = entry
         self.exit: bool = exit
-        self.pattern = pattern_42
+        self.path: bool = False
+        self.solution: bool = False
 
 
 class MazeGenerator:
@@ -95,6 +96,10 @@ class MazeGenerator:
                     content = f"{self.exit_color} ⬤ {RESET}"
                 elif cell.immutable:
                     content = f"{self.pattern_color}███{RESET}"
+                elif cell.solution:
+                    content = f"{self.entry_color} ▣ {RESET}"
+                elif cell.path:
+                    content = f"{self.exit_color} ▣ {RESET}"
                 else:
                     content = "   "
                 corner = wall_char
@@ -164,6 +169,23 @@ class MazeGenerator:
             neighbors.append((x, y + 1, 'S'))
         if x > 0 and not self.maze[y][x - 1].visited:
             neighbors.append((x - 1, y, 'W'))
+        return neighbors
+
+    def _get_accessible_neighbors(
+        self, x: int, y: int
+    ) -> List[Tuple[int, int]]:
+        cell = self.maze[y][x]
+        neighbors = []
+
+        if not cell.walls & 1:
+            neighbors.append((x, y - 1))
+        if not cell.walls & 2:
+            neighbors.append((x + 1, y))
+        if not cell.walls & 4:
+            neighbors.append((x, y + 1))
+        if not cell.walls & 8:
+            neighbors.append((x - 1, y))
+
         return neighbors
 
     def _turn_imperfect(self) -> None:
@@ -313,3 +335,43 @@ class MazeGenerator:
                 self.maze[ny][nx].visited = True
                 if self.anim:
                     self._update_frame()
+
+
+    def _solve_bfs(self) -> None:
+        from collections import deque
+
+        start_x: int = self.config.ENTRY['x']
+        start_y: int = self.config.ENTRY['y']
+        end: Tuple[int, int] = ( self.config.EXIT['x'], self.config.EXIT['y'] )
+        queue: deque[Tuple[int, int]] = deque([(start_x, start_y)])
+        visited: set = set()
+        parent: Dict[Tuple[int, int], Tuple[int, int]] = {}
+        self.maze[start_y][start_x].visited = True
+        while queue:
+            current_x, current_y = queue.popleft()
+            self.maze[current_y][current_x].path = True
+            if self.anim:
+                self._update_frame()
+            if (current_x, current_y) == end:
+                break
+
+            neighbors = self._get_accessible_neighbors(current_x, current_y)
+            for next_x, next_y in neighbors:
+                if (next_x, next_y) not in visited:
+                    parent[(next_x, next_y)] = (current_x, current_y)
+                    queue.append((next_x, next_y))
+                    visited.add((next_x, next_y))
+
+        path: List[Tuple[int, int]] = []
+        cell: Tuple[int, int] = end
+        while cell != (start_x, start_y):
+            path.append(cell)
+            self.maze[cell[0]][cell[1]].solution = True
+            if self.anim:
+                self._update_frame()
+            cell = parent[cell]
+
+        # path.append((start['x'], start['y']))
+
+    def show_solution(self) -> None:
+        self._solve_bfs()
