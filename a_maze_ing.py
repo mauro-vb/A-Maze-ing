@@ -1,5 +1,6 @@
 from a_maze_ing import MazeGenerator, Theme
-from typing import Dict, List, Callable
+from typing import Dict, List, Callable, Optional
+from sys import argv, exit
 import os
 
 
@@ -18,12 +19,13 @@ def user_interface(actions: Dict[str, Callable]) -> None:
 
 
 def generate_maze(
+    config_file: Optional[str] = None,
     anim: bool = True,
     new_seed: bool = False,
     theme: Theme = Theme.DEFAULT
 ) -> MazeGenerator:
     mazegen: MazeGenerator = MazeGenerator(
-        'sample_config.txt',
+        config_file,
         anim=anim,
         theme=theme,
         new_seed=new_seed
@@ -39,7 +41,11 @@ if __name__ == "__main__":
     animate: bool = True
     show_solution: bool = False
     theme: Theme = Theme.DEFAULT
-    maze: MazeGenerator = generate_maze()
+    try:
+        maze: MazeGenerator = generate_maze(argv[1])
+    except (IndexError, FileNotFoundError):
+        print("Configuration file must be provided...")
+        exit()
 
     # Interface
     def regenerate() -> None:
