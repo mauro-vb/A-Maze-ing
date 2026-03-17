@@ -6,10 +6,10 @@ HEIGHT=20
 ENTRY=0,0
 EXIT=17,9
 OUTPUT_FILE=maze.txt
-PERFECT=True
+PERFECT=False
 
 # Optional
 
 #SEED=1234321111
-ALGORITHM=DFS
+ALGORITHM=kruskal
 # Hunt and Kill OR Prim's OR Origin Shift

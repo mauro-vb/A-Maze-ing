@@ -12,16 +12,17 @@ def user_interface(actions: Dict[str, Callable]) -> None:
     choice: str = input(f"Choice? (1-{len(actions)}): ")
     try:
         action: Callable = actions[action_names[int(choice) - 1]]
-    except Exception as e:
-        print(f"Something went wrong! {e}")
-    action()
+        action()
+    except (ValueError, IndexError):
+        print(f"\nPlease enter a valid number...")
 
 
 def generate_maze(
     anim: bool = True,
     new_seed: bool = False,
-    theme: Theme = Theme.SEASIDE
+    theme: Theme = Theme.DEFAULT
 ) -> None:
+    global maze
     mazegen: MazeGenerator = MazeGenerator(
         'sample_config.txt',
         anim=anim,
@@ -31,12 +32,15 @@ def generate_maze(
     os.system('clear')
     mazegen.generate()
     os.system('clear')
-    mazegen.new_render_maze()
+    mazegen.render_maze()
+    maze = mazegen
 
 
 if __name__ == "__main__":
     animate: bool = True
-    theme: Theme = Theme.CANDY
+    show_solution: bool = False
+    theme: Theme = Theme.DEFAULT
+    maze: MazeGenerator
     generate_maze()
 
     # Interface
@@ -44,7 +48,8 @@ if __name__ == "__main__":
         generate_maze(anim=animate, new_seed=True, theme=theme)
 
     def toggle_solution() -> None:
-        pass
+        global show_solution
+        show_solution= (not show_solution)
 
     def toggle_animate() -> None:
         global animate
@@ -56,24 +61,22 @@ if __name__ == "__main__":
         try:
             global theme
             themes: List = list(Theme)
-            theme = themes[input(f"Choice? (1 - {len(Theme)}): ") - 1]
-        except Exception as e:
-            print(f"issue {e}")
-
-
-    def change_maze_colors() -> None:
-        pass
+            theme = themes[int(input(f"Choice? (1 - {len(Theme)}): ")) - 1]
+        except (ValueError, IndexError):
+            print(f"\nPlease enter a valid number...")
 
     def quit_program() -> None:
         os.system('clear')
         quit()
 
     while True:
+        os.system('clear')
+        maze.render_maze()
         actions: Dict[str, Callable] = {
             "Generate new maze": regenerate,
             f"{'Disable' if animate else 'Enable'} animation": toggle_animate,
             "Change color theme": change_theme,
-            "Show/Hide solution": toggle_solution,
+            f"{'Hide' if show_solution else 'Show'} solution": toggle_solution,
             "Quit": quit_program
         }
         user_interface(actions)

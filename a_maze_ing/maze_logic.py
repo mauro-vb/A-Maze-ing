@@ -1,7 +1,9 @@
 from .parser import ConfigParser
 from .colors import Theme
 from typing import List, Optional, Tuple, Dict
-from random import seed, randint
+from random import seed, randint, random, choice
+from os import system
+import time
 
 pattern_42: Tuple[Tuple[int, int], ...] = (
     (0, 0), (0, 1), (0, 2), (1, 2), (2, 0),
@@ -64,7 +66,7 @@ class MazeGenerator:
             self.maze.append(row)
         pwidth: int = max(self.pattern, key=lambda pos: pos[0])[0]
         pheight: int = max(self.pattern, key=lambda pos: pos[1])[1]
-
+        self.size = self.config.WIDTH * self.config.HEIGHT
         if self.config.WIDTH > pwidth and self.config.HEIGHT > pheight:
             x_offset: int = (self.config.WIDTH - pwidth) // 2
             y_offset: int = (self.config.HEIGHT - pheight) // 2
@@ -79,10 +81,7 @@ class MazeGenerator:
         else:
             print("Could not draw pattern, maze is too small...")
 
-
-    def new_render_maze(
-        self, save: bool = False
-    ) -> None:
+    def render_maze(self, save: bool = False) -> None:
         RESET = '\033[0m'
         render: str = "\n"
         wall_char: str = f'{self.wall_color}█{RESET}'
@@ -120,46 +119,6 @@ class MazeGenerator:
         else:
             print(render, end='')
 
-#    def render_maze(self, save: bool = False, wall_char: str = '█') -> None:
-#        render: str = ''
-#        w: str = wall_char
-#        hwall: str = f'{w}{w}{w}'
-#        hopen: str = '   '
-#        vwall: str = f'{w}'
-#        vopen: str = ' '
-#        for row in self.maze:
-#            line1: str = ''
-#            line2: str = ''
-#            for cell in row:
-#                cellcontent: str = hopen
-#                if cell.entry or cell.exit:
-#                    cellcontent = ' ● ' if cell.entry else ' * '
-#
-#                # 1st line
-#                north: str = hwall if (cell.walls & (1 << 0)) else hopen
-#                east: str = vwall if (cell.walls & (1 << 1)) else vopen
-#                west: str = vwall if (cell.walls & (1 << 3)) else vopen
-#                line1 += west + north + east
-#
-#                # 2nd line
-#                east: str = vwall if (cell.walls & (1 << 1)) else vopen
-#                south: str = hwall if (cell.walls & (1 << 2)) else cellcontent
-#                west: str = vwall if (cell.walls & (1 << 3)) else vopen
-#                line2 += west + south + east
-#
-#            rowstr: str = line1 + '\n' + line2 + '\n'
-#            if save:
-#                render += rowstr
-#            else:
-#                print(rowstr, end='')
-#
-#        bottomwall: str = f'{w}{w}{w}{w}{w}' * self.config.WIDTH
-#        if save:
-#            with open(self.config.OUTPUT_FILE, 'w') as file:
-#                file.write(render + bottomwall)
-#        else:
-#            print(bottomwall)
-
     def get_maze_hex(self) -> str:
         maze_hex: str = ''
         for row in self.maze:
@@ -184,6 +143,14 @@ class MazeGenerator:
             self._generate_bfs()
         elif algo == 'KRUSKAL':
             self._generate_kruskal()
+        if not self.config.PERFECT:
+            self._turn_imperfect()
+
+    def _update_frame(self) -> None:
+        #print('\033[H', end='')
+        system('clear')
+        self.render_maze()
+        time.sleep(0.025)
 
     def _get_unvisited_neighbors(
         self, x: int, y: int
@@ -198,6 +165,52 @@ class MazeGenerator:
         if x > 0 and not self.maze[y][x - 1].visited:
             neighbors.append((x - 1, y, 'W'))
         return neighbors
+
+    def _turn_imperfect(self) -> None:
+        def inbounds_and_not_immutable(y: int, x: int) -> bool:
+            if x < 0 or x >= len(self.maze[0]):
+                return False
+            if y < 0 or y >= len(self.maze):
+                return False
+            if self.maze[y][x].immutable:
+                return False
+            return True
+
+        def n_walls(cell: Cell) -> int:
+            return bin(cell.walls).count('1')
+
+        dirs: Dict[int, Tuple[int, int]] = {
+            1: (-1, 0),
+            2: (0, 1),
+            4: (1, 0),
+            8: (0, -1)
+        }
+        opposite: Dict[int, int] = { 1: 4, 2: 8, 4: 1, 8: 2}
+        removed: int = 0
+        target_removals: int = randint(
+            max(1, int(self.size * 0.025)),
+            int(self.size * 0.05)
+        )
+        while removed < target_removals:
+            x: int = randint(0, len(self.maze[0]) - 1)
+            y: int = randint(0, len(self.maze) - 1)
+            cell: Cell = self.maze[y][x]
+            if cell.immutable:
+                continue
+            dir: int = choice(list(dirs.keys()))
+            ny, nx = dirs[dir][0] + y, dirs[dir][1] + x
+            if not inbounds_and_not_immutable(ny, nx):
+                continue
+            neighbor: Cell = self.maze[ny][nx]
+            if not (cell.walls & dir) or not (neighbor.walls & opposite[dir]):
+                continue
+            if n_walls(cell) + n_walls(neighbor) <= 3:
+                continue
+            cell.walls &= ~dir
+            neighbor.walls &= ~opposite[dir]
+            removed += 1
+            if self.anim:
+                self._update_frame()
 
     def _remove_wall(
         self, cx: int, cy: int, nx: int, ny: int, direction: str
@@ -219,8 +232,6 @@ class MazeGenerator:
 
     def _generate_dfs(self) -> None:
         from random import choice
-        import time
-        # import os
 
         start_x: int = self.config.ENTRY['x']
         start_y: int = self.config.ENTRY['y']
@@ -238,9 +249,7 @@ class MazeGenerator:
                 self.maze[next_y][next_x].visited = True
                 stack.append((next_x, next_y))
                 if self.anim:
-                    print('\033[H', end='')
-                    self.new_render_maze()
-                    time.sleep(0.025)
+                    self._update_frame()
 
     def _generate_bfs(self) -> None:
         from random import shuffle
@@ -264,7 +273,6 @@ class MazeGenerator:
 
     def _generate_kruskal(self) -> None:
         from random import shuffle
-        import time
         parent: dict[Tuple[int, int], Tuple[int, int]] = {}
         rank: dict[Tuple[int, int], int] = {}
         def find(i: Tuple[int, int]) -> Tuple[int, int]:
@@ -304,6 +312,4 @@ class MazeGenerator:
                 self.maze[cy][cx].visited = True
                 self.maze[ny][nx].visited = True
                 if self.anim:
-                    print('\033[H', end='')
-                    self.new_render_maze()
-                    time.sleep(0.05)
+                    self._update_frame()
