@@ -182,6 +182,8 @@ class MazeGenerator:
             self._generate_dfs()
         elif algo == 'BFS':
             self._generate_bfs()
+        elif algo == 'KRUSKAL':
+            self._generate_kruskal()
 
     def _get_unvisited_neighbors(
         self, x: int, y: int
@@ -259,3 +261,49 @@ class MazeGenerator:
                     )
                     self.maze[next_y][next_x].visited = True
                     queue.append((next_x, next_y))
+
+    def _generate_kruskal(self) -> None:
+        from random import shuffle
+        import time
+        parent: dict[Tuple[int, int], Tuple[int, int]] = {}
+        rank: dict[Tuple[int, int], int] = {}
+        def find(i: Tuple[int, int]) -> Tuple[int, int]:
+            if parent[i] == i:
+                return i
+            parent[i] = find(parent[i])
+            return parent[i]
+        def union(i: Tuple[int, int], j: Tuple[int, int]) -> bool:
+            root_i = find(i)
+            root_j = find(j)
+            if root_i != root_j:
+                if rank[root_i] > rank[root_j]:
+                    parent[root_j] = root_i
+                elif rank[root_i] < rank[root_j]:
+                    parent[root_i] = root_j
+                else:
+                    parent[root_j] = root_i
+                    rank[root_i] += 1
+                return True
+            return False
+        edges: List[Tuple[Tuple[int, int], Tuple[int, int], str]] = []
+        for y in range(self.config.HEIGHT):
+            for x in range(self.config.WIDTH):
+                if self.maze[y][x].immutable:
+                    continue
+                cell_id = (x, y)
+                parent[cell_id] = cell_id
+                rank[cell_id] = 0
+                if x < self.config.WIDTH - 1 and not self.maze[y][x+1].immutable:
+                    edges.append(((x, y), (x + 1, y), 'E'))
+                if y < self.config.HEIGHT - 1 and not self.maze[y + 1][x].immutable:
+                    edges.append(((x, y), (x, y + 1), 'S'))
+        shuffle(edges)
+        for (cx, cy), (nx, ny), direction in edges:
+            if union((cx, cy), (nx, ny)):
+                self._remove_wall(cx, cy, nx, ny, direction)
+                self.maze[cy][cx].visited = True
+                self.maze[ny][nx].visited = True
+                if self.anim:
+                    print('\033[H', end='')
+                    self.new_render_maze()
+                    time.sleep(0.05)
