@@ -14,15 +14,14 @@ def user_interface(actions: Dict[str, Callable]) -> None:
         action: Callable = actions[action_names[int(choice) - 1]]
         action()
     except (ValueError, IndexError):
-        print(f"\nPlease enter a valid number...")
+        print("\nPlease enter a valid number...")
 
 
 def generate_maze(
     anim: bool = True,
     new_seed: bool = False,
     theme: Theme = Theme.DEFAULT
-) -> None:
-    global maze
+) -> MazeGenerator:
     mazegen: MazeGenerator = MazeGenerator(
         'sample_config.txt',
         anim=anim,
@@ -33,31 +32,31 @@ def generate_maze(
     mazegen.generate()
     os.system('clear')
     mazegen.render_maze()
-    maze = mazegen
+    return mazegen
 
 
 if __name__ == "__main__":
     animate: bool = True
     show_solution: bool = False
     theme: Theme = Theme.DEFAULT
-    maze: MazeGenerator
-    generate_maze()
+    maze: MazeGenerator = generate_maze()
 
     # Interface
     def regenerate() -> None:
-        generate_maze(anim=animate, new_seed=True, theme=theme)
+        global maze
+        maze = generate_maze(anim=animate, new_seed=True, theme=theme)
+        if show_solution:
+            maze.toggle_solution(show_solution)
 
     def toggle_solution() -> None:
         global show_solution
-        global maze
-        show_solution= (not show_solution)
-        if show_solution:
-            maze.show_solution()
-
+        show_solution = (not show_solution)
+        maze.toggle_solution(show_solution)
 
     def toggle_animate() -> None:
         global animate
         animate = (not animate)
+        maze.anim = animate
 
     def change_theme() -> None:
         for i, t in enumerate(Theme):
@@ -66,8 +65,10 @@ if __name__ == "__main__":
             global theme
             themes: List = list(Theme)
             theme = themes[int(input(f"Choice? (1 - {len(Theme)}): ")) - 1]
+            maze.change_theme(theme)
+            maze.render_maze()
         except (ValueError, IndexError):
-            print(f"\nPlease enter a valid number...")
+            print("\nPlease enter a valid number...")
 
     def quit_program() -> None:
         os.system('clear')

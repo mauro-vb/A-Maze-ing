@@ -1,7 +1,7 @@
 from .parser import ConfigParser
 from .colors import Theme
 from typing import List, Optional, Tuple, Dict
-from random import seed, randint, random, choice
+from random import seed, randint, choice, shuffle
 from os import system
 import time
 
@@ -42,17 +42,21 @@ class MazeGenerator:
         pattern: Tuple[Tuple[int, int], ...] = pattern_42
     ) -> None:
         self.config: ConfigParser = ConfigParser(config_file)
+        self.solution: List[Cell] = []
         self.anim: bool = anim
         self.maze: List[List[Cell]] = []
         self.pattern = pattern
         s: Optional[int] = self.config.SEED
         seed(randint(0, 99999999) if s is None or new_seed else s)
+        self.change_theme(theme)
+        self.maze_init()
+
+    def change_theme(self, theme: Theme) -> None:
         value: Dict = theme.value
         self.wall_color = value['walls']
         self.pattern_color = value['pattern']
         self.exit_color = value['exit']
         self.entry_color = value['entry']
-        self.maze_init()
 
     def maze_init(self) -> None:
         '''Initializes maze grid'''
@@ -97,9 +101,9 @@ class MazeGenerator:
                 elif cell.immutable:
                     content = f"{self.pattern_color}███{RESET}"
                 elif cell.solution:
-                    content = f"{self.entry_color} ▣ {RESET}"
+                    content = f"{self.entry_color} ■ {RESET}"
                 elif cell.path:
-                    content = f"{self.exit_color} ▣ {RESET}"
+                    content = f"{self.exit_color} ▪ {RESET}"
                 else:
                     content = "   "
                 corner = wall_char
@@ -152,7 +156,7 @@ class MazeGenerator:
             self._turn_imperfect()
 
     def _update_frame(self) -> None:
-        #print('\033[H', end='')
+        # print('\033[H', end='')
         system('clear')
         self.render_maze()
         time.sleep(0.025)
@@ -207,7 +211,7 @@ class MazeGenerator:
             4: (1, 0),
             8: (0, -1)
         }
-        opposite: Dict[int, int] = { 1: 4, 2: 8, 4: 1, 8: 2}
+        opposite: Dict[int, int] = {1: 4, 2: 8, 4: 1, 8: 2}
         removed: int = 0
         target_removals: int = randint(
             max(1, int(self.size * 0.025)),
@@ -294,14 +298,17 @@ class MazeGenerator:
                     queue.append((next_x, next_y))
 
     def _generate_kruskal(self) -> None:
-        from random import shuffle
+        WIDTH: int = self.config.WIDTH
+        HEIGHT: int = self.config.HEIGHT
         parent: dict[Tuple[int, int], Tuple[int, int]] = {}
         rank: dict[Tuple[int, int], int] = {}
+
         def find(i: Tuple[int, int]) -> Tuple[int, int]:
             if parent[i] == i:
                 return i
             parent[i] = find(parent[i])
             return parent[i]
+
         def union(i: Tuple[int, int], j: Tuple[int, int]) -> bool:
             root_i = find(i)
             root_j = find(j)
@@ -316,16 +323,17 @@ class MazeGenerator:
                 return True
             return False
         edges: List[Tuple[Tuple[int, int], Tuple[int, int], str]] = []
-        for y in range(self.config.HEIGHT):
-            for x in range(self.config.WIDTH):
+        for y in range(HEIGHT):
+            for x in range(WIDTH):
                 if self.maze[y][x].immutable:
                     continue
                 cell_id = (x, y)
                 parent[cell_id] = cell_id
                 rank[cell_id] = 0
-                if x < self.config.WIDTH - 1 and not self.maze[y][x+1].immutable:
+
+                if x < WIDTH - 1 and not self.maze[y][x+1].immutable:
                     edges.append(((x, y), (x + 1, y), 'E'))
-                if y < self.config.HEIGHT - 1 and not self.maze[y + 1][x].immutable:
+                if y < HEIGHT - 1 and not self.maze[y + 1][x].immutable:
                     edges.append(((x, y), (x, y + 1), 'S'))
         shuffle(edges)
         for (cx, cy), (nx, ny), direction in edges:
@@ -336,13 +344,12 @@ class MazeGenerator:
                 if self.anim:
                     self._update_frame()
 
-
     def _solve_bfs(self) -> None:
         from collections import deque
 
         start_x: int = self.config.ENTRY['x']
         start_y: int = self.config.ENTRY['y']
-        end: Tuple[int, int] = ( self.config.EXIT['x'], self.config.EXIT['y'] )
+        end: Tuple[int, int] = (self.config.EXIT['x'], self.config.EXIT['y'])
         queue: deque[Tuple[int, int]] = deque([(start_x, start_y)])
         visited: set = set()
         parent: Dict[Tuple[int, int], Tuple[int, int]] = {}
@@ -362,16 +369,23 @@ class MazeGenerator:
                     queue.append((next_x, next_y))
                     visited.add((next_x, next_y))
 
-        path: List[Tuple[int, int]] = []
+        path: List[Cell] = []
         cell: Tuple[int, int] = end
         while cell != (start_x, start_y):
-            path.append(cell)
-            self.maze[cell[0]][cell[1]].solution = True
+            cell_o = self.maze[cell[1]][cell[0]]
+            path.append(cell_o)
+            cell_o.solution = True
             if self.anim:
                 self._update_frame()
             cell = parent[cell]
 
-        # path.append((start['x'], start['y']))
+        self.solution = path
+        for x, y in visited:
+            self.maze[y][x].path = False
 
-    def show_solution(self) -> None:
-        self._solve_bfs()
+    def toggle_solution(self, show: bool) -> None:
+        if not self.solution:
+            self._solve_bfs()
+        for cell in self.solution:
+            cell.solution = show
+        self.render_maze()
