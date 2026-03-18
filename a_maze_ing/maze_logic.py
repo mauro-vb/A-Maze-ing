@@ -2,7 +2,6 @@ from .parser import ConfigParser
 from .colors import Theme
 from typing import List, Optional, Tuple, Dict
 from random import seed, randint, choice, shuffle
-from os import system
 import time
 
 pattern_42: Tuple[Tuple[int, int], ...] = (

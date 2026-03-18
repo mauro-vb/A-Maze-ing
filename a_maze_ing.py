@@ -51,7 +51,10 @@ if __name__ == "__main__":
     # Interface
     def regenerate() -> None:
         global maze
-        maze = generate_maze(config_file=config, anim=animate, new_seed=True, theme=theme)
+        maze = generate_maze(config_file=config,
+                             anim=animate,
+                             new_seed=True,
+                             theme=theme)
         if show_solution:
             maze.toggle_solution(show_solution)
 
