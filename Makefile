@@ -8,7 +8,7 @@ SRC		= a_maze_ing.py a_maze_ing/
 all: run
 
 run:
-	$(PYTHON) $(MAIN) "sample_config.txt"
+	$(PYTHON) $(MAIN) "config.txt"
 
 uninstall:
 	@rm -rf .venv || true
