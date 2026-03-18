@@ -42,15 +42,16 @@ if __name__ == "__main__":
     show_solution: bool = False
     theme: Theme = Theme.DEFAULT
     try:
-        maze: MazeGenerator = generate_maze(argv[1])
+        config = argv[1]
     except (IndexError, FileNotFoundError):
         print("Configuration file must be provided...")
         exit()
+    maze: MazeGenerator = generate_maze(config)
 
     # Interface
     def regenerate() -> None:
         global maze
-        maze = generate_maze(anim=animate, new_seed=True, theme=theme)
+        maze = generate_maze(config_file = config, anim=animate, new_seed=True, theme=theme)
         if show_solution:
             maze.toggle_solution(show_solution)
 

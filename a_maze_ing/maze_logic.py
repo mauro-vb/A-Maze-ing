@@ -159,10 +159,10 @@ class MazeGenerator:
             file.write(self.get_maze_hex())
 
     def _update_frame(self) -> None:
-        # print('\033[H', end='')
-        system('clear')
         self.render_maze()
         time.sleep(0.025)
+        lines_up = (self.config.HEIGHT * 2) + 1
+        print(f'\033[{lines_up}F', end='', flush=True)
 
     def _get_unvisited_neighbors(
         self, x: int, y: int
