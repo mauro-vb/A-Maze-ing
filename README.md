@@ -96,6 +96,7 @@ The architecture separates the interactive Command-Line Interface (`a_maze_ing.p
   ```bash
   make package
   ```
+
     ```python
     from a_maze_ing import MazeGenerator, Theme
 
