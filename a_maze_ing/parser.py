@@ -64,15 +64,19 @@ class ConfigParser:
                         print(f"Invalid value for {key}: {e}")
         except FileNotFoundError:
             print(f"Could not find {self.config_file}")
+            quit()
+
         except PermissionError:
             print(f"Could not open {self.config_file}, check permissions.")
+            quit()
         except Exception as e:
             print(e)
+            quit()
         try:
             self.validate_config()
         except AssertionError as e:
             print(f"Invalid config: {e}")
-            exit()
+            quit()
 
     def validate_config(self) -> None:
         '''Checks whether config values are present and valid'''
