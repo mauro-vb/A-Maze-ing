@@ -41,7 +41,7 @@ class MazeGenerator:
         pattern: Tuple[Tuple[int, int], ...] = pattern_42
     ) -> None:
         self.config: ConfigParser = ConfigParser(config_file)
-        self.solution: List[Cell] = []
+        self.solution: List[Tuple[Cell, Tuple[int, int]]] = []
         self.anim: bool = anim
         self.maze: List[List[Cell]] = []
         self.pattern = pattern
@@ -137,6 +137,21 @@ class MazeGenerator:
             maze_hex += line + '\n'
         return maze_hex
 
+    def get_solution_hex(self) -> str:
+        if not self.solution:
+            self._solve_bfs(forhex=True)
+
+        solution_hex: str = ''
+        dir_to_str: Dict = {
+            (0, -1): 'N',
+            (0, 1): 'S',
+            (-1, 0): 'W',
+            (1, 0): 'E',
+        }
+        for _, dir in self.solution:
+            solution_hex += dir_to_str.get(dir, 'X')
+        return solution_hex
+
     def test_generate(self) -> None:
         for row in self.maze:
             for cell in row:
@@ -156,7 +171,11 @@ class MazeGenerator:
             self._turn_imperfect()
 
         with open(self.config.OUTPUT_FILE, 'w') as file:
+            E: str = f"{self.config.ENTRY['x']},{self.config.ENTRY['y']}"
+            X: str = f"{self.config.EXIT['x']},{self.config.EXIT['y']}"
             file.write(self.get_maze_hex())
+            file.write(f'\n{E}\n{X}\n')
+            file.write(self.get_solution_hex())
 
     def _update_frame(self) -> None:
         self.render_maze()
@@ -347,7 +366,7 @@ class MazeGenerator:
                 if self.anim:
                     self._update_frame()
 
-    def _solve_bfs(self) -> None:
+    def _solve_bfs(self, forhex: bool = False) -> None:
         from collections import deque
 
         start_x: int = self.config.ENTRY['x']
@@ -360,7 +379,7 @@ class MazeGenerator:
         while queue:
             current_x, current_y = queue.popleft()
             self.maze[current_y][current_x].path = True
-            if self.anim:
+            if self.anim and not forhex:
                 self._update_frame()
             if (current_x, current_y) == end:
                 break
@@ -372,23 +391,33 @@ class MazeGenerator:
                     queue.append((next_x, next_y))
                     visited.add((next_x, next_y))
 
-        path: List[Cell] = []
+        path: List[Tuple[Cell, Tuple[int, int]]] = []
         cell: Tuple[int, int] = end
         while cell != (start_x, start_y):
             cell_o = self.maze[cell[1]][cell[0]]
-            path.append(cell_o)
+            path.append((
+                cell_o,
+                (cell[0] - parent[cell][0], cell[1] - parent[cell][1])
+            ))
+            cell = parent[cell]
+            if forhex:
+                continue
             cell_o.solution = True
             if self.anim:
                 self._update_frame()
-            cell = parent[cell]
 
+        path.reverse()
         self.solution = path
         for x, y in visited:
             self.maze[y][x].path = False
 
     def toggle_solution(self, show: bool) -> None:
+        if self.anim and show:
+            for cell, _ in self.solution:
+                cell.solution = False
+            self._solve_bfs()
         if not self.solution:
             self._solve_bfs()
-        for cell in self.solution:
+        for cell, _ in self.solution:
             cell.solution = show
         self.render_maze()
