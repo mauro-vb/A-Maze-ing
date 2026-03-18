@@ -49,7 +49,7 @@ clean:
 	@rm -rf __pycache__ a_maze_ing/__pycache__ .mypy_cache
 
 package:
-	$(PYTHON) setup.py sdist bdist_wheel
+	$(PYTHON) -m build
 	@mv dist/*.tar.gz .
 	@mv dist/*.whl .
 
