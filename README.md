@@ -97,13 +97,13 @@ The architecture separates the interactive Command-Line Interface (`a_maze_ing.p
   make package
   ```
 
-    ```python
-    from a_maze_ing import MazeGenerator, Theme
+   ```python
+   from a_maze_ing import MazeGenerator, Theme
 
-    # Initialize a maze programmatically
-    generator = MazeGenerator(config_file="config.txt", theme=Theme.DEFAULT)
-    generator.generate()
-    ```
+   # Initialize a maze programmatically
+   generator = MazeGenerator(config_file="config.txt", theme=Theme.DEFAULT)
+   generator.generate()
+   ```
 
 This modularity ensures the generation logic can be easily integrated into future UI frameworks, video games, or network design simulators.
 
