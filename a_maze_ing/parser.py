@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 
 
 class ConfigParser:
@@ -11,8 +11,8 @@ class ConfigParser:
         # Mandatory fields
         self.WIDTH: int = 0
         self.HEIGHT: int = 0
-        self.ENTRY: Dict = {}
-        self.EXIT: Dict = {}
+        self.ENTRY: Dict[Any, Any] = {}
+        self.EXIT: Dict[Any, Any] = {}
         self.OUTPUT_FILE: str = ''
         self.PERFECT: bool = False
 
@@ -105,7 +105,7 @@ class ConfigParser:
         return value
 
     @staticmethod
-    def extract_coords(strvalue: str) -> Dict:
+    def extract_coords(strvalue: str) -> Dict[Any, Any]:
         vals: List[str] = strvalue.split(',')
         if len(vals) != 2:
             raise ValueError(strvalue)

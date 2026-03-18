@@ -1,6 +1,6 @@
 from .parser import ConfigParser
 from .colors import Theme
-from typing import List, Optional, Tuple, Dict
+from typing import List, Optional, Tuple, Dict, Any, Set
 from random import seed, randint, choice, shuffle
 import time
 
@@ -51,7 +51,7 @@ class MazeGenerator:
         self.maze_init()
 
     def change_theme(self, theme: Theme) -> None:
-        value: Dict = theme.value
+        value: Dict[Any, Any] = theme.value
         self.wall_color = value['walls']
         self.pattern_color = value['pattern']
         self.exit_color = value['exit']
@@ -59,8 +59,9 @@ class MazeGenerator:
 
     def maze_init(self) -> None:
         '''Initializes maze grid'''
-        entry: Tuple = (self.config.ENTRY['x'],  self.config.ENTRY['y'])
-        exit: Tuple = (self.config.EXIT['x'],  self.config.EXIT['y'])
+        entry: Tuple[Any, Any] = (self.config.ENTRY['x'],
+                                  self.config.ENTRY['y'])
+        exit: Tuple[Any, Any] = (self.config.EXIT['x'],  self.config.EXIT['y'])
         for y in range(self.config.HEIGHT):
             row: List[Cell] = []
             for x in range(self.config.WIDTH):
@@ -353,7 +354,7 @@ class MazeGenerator:
         start_y: int = self.config.ENTRY['y']
         end: Tuple[int, int] = (self.config.EXIT['x'], self.config.EXIT['y'])
         queue: deque[Tuple[int, int]] = deque([(start_x, start_y)])
-        visited: set = set()
+        visited: Set[Any] = set()
         parent: Dict[Tuple[int, int], Tuple[int, int]] = {}
         self.maze[start_y][start_x].visited = True
         while queue:

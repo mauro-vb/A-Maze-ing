@@ -11,5 +11,5 @@ PERFECT=True
 # Optional
 
 #SEED=1234321111
-ALGORITHM=kruskal
+ALGORITHM=DFS
 # Hunt and Kill OR Prim's OR Origin Shift ▪

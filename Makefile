@@ -25,6 +25,7 @@ lint:
 	-@$(VENV_PYTHON) -m flake8 $(SRC)
 	@echo "\n-- Running mypy --\n"
 	@$(VENV_PYTHON) -m mypy . \
+        --exclude 'build/'\
 		--warn-return-any \
 		--warn-unused-ignores \
 		--ignore-missing-imports \
@@ -36,6 +37,7 @@ lint-strict:
 	-@$(VENV_PYTHON) -m flake8 $(SRC)
 	@echo "Running mypy"
 	-@$(VENV_PYTHON) -m mypy . --strict \
+        --exclude '(build|dist|\.venv)'\
 		--warn-return-any \
 		--warn-unused-ignores \
 		--ignore-missing-imports \
