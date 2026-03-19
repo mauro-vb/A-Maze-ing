@@ -34,11 +34,11 @@ You can run the main program using the Makefile:
 make run
 ```
 
-Or you can execute it manually by passing your configuration file as the only argument[cite: 113, 115]:
-
+Or you can execute it manually by passing your configuration file as the only argument:
 ```bash
 python3 a_maze_ing.py config.txt
 ```
+
 
 ### Development & Linting
 
@@ -93,13 +93,17 @@ This project implements three distinct maze generation algorithms: **DFS (Depth-
 The architecture separates the interactive Command-Line Interface (`a_maze_ing.py`) from the core generation logic (`maze_logic.py`).
 
   * **How to reuse:** The `MazeGenerator` and `Cell` classes can be imported directly into any other Python 3.10+ application without triggering the CLI.
-    ```python
-    from a_maze_ing import MazeGenerator, Theme
+  ```bash
+  make package
+  ```
 
-    # Initialize a maze programmatically
-    generator = MazeGenerator(config_file="config.txt", theme=Theme.DEFAULT)
-    generator.generate()
-    ```
+   ```python
+   from a_maze_ing import MazeGenerator, Theme
+
+   # Initialize a maze programmatically
+   generator = MazeGenerator(config_file="config.txt", theme=Theme.DEFAULT)
+   generator.generate()
+   ```
 
 This modularity ensures the generation logic can be easily integrated into future UI frameworks, video games, or network design simulators.
 
