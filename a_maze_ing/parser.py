@@ -14,7 +14,7 @@ class ConfigParser:
         self.ENTRY: Dict[Any, Any] = {}
         self.EXIT: Dict[Any, Any] = {}
         self.OUTPUT_FILE: str = ''
-        self.PERFECT: bool = False
+        self.PERFECT: bool = True
 
         # Optional fields
         self.SEED: Optional[int] = None
@@ -58,10 +58,13 @@ class ConfigParser:
                                 raise KeyError(key)
                     except IndexError as e:
                         print(f"Invalid line: {e}")
+                        quit()
                     except KeyError as e:
                         print(f"Invalid key: {e}")
+                        quit()
                     except ValueError as e:
                         print(f"Invalid value for {key}: {e}")
+                        quit()
         except FileNotFoundError:
             print(f"Could not find {self.config_file}")
             quit()
@@ -80,6 +83,10 @@ class ConfigParser:
 
     def validate_config(self) -> None:
         '''Checks whether config values are present and valid'''
+        for param in (
+            self.WIDTH, self.HEIGHT, self.ENTRY, self.EXIT, self.OUTPUT_FILE
+        ):
+            assert param, "Missing Mandatory Parameter. Check config file."
         assert self.ENTRY != self.EXIT, "ENTRY and EXIT cannot be the same"
         for coord in (self.ENTRY, self.EXIT):
             assert coord['x'] < self.WIDTH, "ENTRY or EXIT is out of bounds"

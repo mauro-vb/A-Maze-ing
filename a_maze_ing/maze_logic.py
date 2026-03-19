@@ -11,6 +11,47 @@ pattern_42: Tuple[Tuple[int, int], ...] = (
     (4, 2), (4, 3), (4, 4), (5, 4), (6, 4)  # '2'
 )
 
+pattern_M: Tuple[Tuple[int, int], ...] = (
+    (0, 0), (0, 1), (0, 2), (0, 3), (0, 4),
+    (1, 1),
+    (2, 2),
+    (3, 1),
+    (4, 0), (4, 1), (4, 2), (4, 3), (4, 4)
+)
+
+pattern_star: Tuple[Tuple[int, int], ...] = (
+    (3, 0),
+
+    (2, 1), (3, 1), (4, 1),
+
+    (1, 2), (2, 2), (3, 2), (4, 2), (5, 2),
+
+    (0, 3), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3),
+
+    (2, 4), (3, 4), (4, 4),
+
+    (1, 5), (3, 5), (5, 5),
+)
+
+pattern_heart: Tuple[Tuple[int, int], ...] = (
+    (1, 0), (2, 0), (4, 0), (5, 0),
+
+    (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1),
+
+    (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2),
+
+    (1, 3), (2, 3), (3, 3), (4, 3), (5, 3),
+
+    (2, 4), (3, 4), (4, 4),
+
+    (3, 5),
+)
+
+pattern_smiley: Tuple[Tuple[int, int], ...] = (
+    (1, 1), (5, 1),
+    (1, 4), (2, 5), (3, 5), (4, 5), (5, 4),
+)
+
 
 class Cell:
     def __init__(
@@ -79,7 +120,7 @@ class MazeGenerator:
                 cell: Cell = self.maze[y + y_offset][x + x_offset]
                 if cell.entry or cell.exit:
                     print("Entry and Exit cannot be on pattern.")
-                    return
+                    quit()
                 cell.walls = 15
                 cell.visited = True
                 cell.immutable = True
@@ -142,7 +183,7 @@ class MazeGenerator:
             self._solve_bfs(forhex=True)
 
         solution_hex: str = ''
-        dir_to_str: Dict = {
+        dir_to_str: Dict[Tuple[int, int], str] = {
             (0, -1): 'N',
             (0, 1): 'S',
             (-1, 0): 'W',
